@@ -1,0 +1,5 @@
+---
+
+- name: test value
+  debug:
+    msg: "{{ solr_dir }}"

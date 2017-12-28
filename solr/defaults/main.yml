@@ -1,0 +1,23 @@
+---
+
+software_files_path: "/opt/software"
+software_install_path: "/usr/local"
+
+solr_version: "6.6.2"
+
+solr_file: "solr-{{ solr_version }}.tgz"
+solr_file_path: "{{ software_files_path }}/{{ solr_file }}"
+solr_file_url: "http://mirrors.shuosc.org/apache/lucene/solr/{{ solr_version }}/solr-{{ solr_version }}.tgz"
+
+zookeeper_hosts: ""
+
+solr_user: "solr"
+solr_port: 8983
+
+solr_home: "/var/solr"
+solr_dir: "{{ solr_home if zookeeper_hosts == '' else solr_home~'/'~solr_port}}"
+
+solr_env_file: "{{ solr_dir }}/solr.in.sh"
+solr_name: "solr{{ solr_port if zookeeper_hosts != '' else '' }}"
+solr_datadir: "{{ solr_dir }}/data"
+solr_datalogdir: "{{ solr_dir }}/logs"

@@ -1,0 +1,65 @@
+---
+
+- name: install | Check if solr local file is already configured.
+  stat: path={{ solr_file_path }}
+  connection: local
+  register: solr_file_result
+
+- name: install | Create software files path.
+  file: path={{ software_files_path }} state=directory
+  connection: local
+  when: not solr_file_result.stat.exists
+
+- name: install | Download solr file.
+  get_url: url={{ solr_file_url }} dest={{ software_files_path }}
+  connection: local
+  when: not solr_file_result.stat.exists
+
+- name: install | Copy solr file to agent.
+  unarchive:
+    src: "{{ solr_file_path }}"
+    dest: "{{ software_install_path }}"
+    creates: "{{ software_install_path }}/solr-{{ solr_version }}"
+
+- name: install | Check if solr remote soft link is already configured.
+  stat: path="{{ software_install_path }}/solr"
+  register: solr_soft_line_result
+
+- name: install | Create solr dir soft link.
+  file: "src={{ software_install_path }}/solr-{{ solr_version }} dest={{ software_install_path }}/solr state=link"
+  when: not solr_soft_line_result.stat.exists
+
+- name: "install | Create {{ solr_user }} group."
+  group: name={{ solr_user }}
+
+- name: "install | Create {{ solr_user }} user."
+  user: name={{ solr_user }} group={{ solr_user }}
+
+- name: install | Make sure the solr vars dir exists
+  file: path={{ solr_dir }} state=directory owner={{ solr_user }} group={{ solr_user }}
+
+- name: install | Make sure the solr home dir exists
+  file: path={{ solr_datadir }} state=directory owner={{ solr_user }} group={{ solr_user }}
+
+- name: install | Make sure the solr log dir exists
+  file: path={{ solr_datalogdir }} state=directory owner={{ solr_user }} group={{ solr_user }}
+
+- name: install | Copy default solr.xml zoo.cfg file to solr home
+  copy:
+    remote_src: true
+    src: "{{ software_install_path }}/solr-{{ solr_version }}/server/solr/{{ item }}"
+    dest: "{{ solr_datadir }}"
+    owner: "{{ solr_user }}"
+    group: "{{ solr_user }}"
+  with_items:
+    - "solr.xml"
+    - "zoo.cfg"
+
+- name: install | Copy log4j.properties file to solr vars dir
+  copy:
+    remote_src: true
+    src: "{{ software_install_path }}/solr-{{ solr_version }}/server/resources/log4j.properties"
+    dest: "{{ solr_dir }}"
+    owner: "{{ solr_user }}"
+    group: "{{ solr_user }}"
+
